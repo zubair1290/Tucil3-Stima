@@ -1,14 +1,14 @@
 import os
-import numpy as np
 
 class AdjGraf:
     def __init__(self, node):
         self.node = node
-        self.matrix = np.zeros((node, node), dtype='i')
+        self.matrix = [[0 for i in range(node)] for i in range(node)]
         self.name = ["" for i in range(node)]
-        self.name = np.zeros(node, dtype='O')
     def add_edge(self, sc, dest, weight):
         self.matrix[sc][dest] = weight
+    def add_all_edge(self, sc, neighbor):
+        self.matrix[sc] = neighbor
     def neighbor(self, node):
         return self.matrix[node]
     def set_name(self, node, name):
@@ -23,94 +23,61 @@ file = input()
 adj = None
 with open(DIRECTORY + file) as rf:
     lines = rf.readlines()
-    adj = AdjGraf(lines[0].count(' ')+1)
-    brs = 0
-    for line in lines:
-        if line[0] == '-': break
-        kol, weight = 0, ""
-        for cc in line[:-1]:
-            if cc == ' ':
-                adj.add_edge(brs, kol, int(weight))
-                kol += 1
-                weight = ""
-            else:
-                weight += cc
-        adj.add_edge(brs, kol, int(weight))
-        brs += 1
-    del weight, brs, kol
-    # for cc in lines[-1]:
-    #     if (cc == "\""):
-    #         continue
-    #     if cc == ' ':
-    #         print(road)
-    #         adj.set_name(kol, road)
-    #         kol += 1
-    #         road = "a"
-    #     else:
-    #         pass
-    #         road += str(cc)
-    #         print(road)
-    kol = 0
-    road = ""
-    i = 1
-    line = lines[-1]
-    while i < line.__len__():
-        if line[i] == '\"':
-            adj.set_name(kol, road)
-            print(road)
-            kol += 1
-            road = ""
-            i += 2
-        else:
-            road += line[i]
-        i+=1
-    del road, line, lines, cc
+    sum_node = len(lines[0].split())
+    adj = AdjGraf(sum_node)
+    for brs in range(sum_node):
+        adj.add_all_edge(brs, lines[brs][:-1].split())
 
-    # adj.set_name(kol, road)
+    for i, line in enumerate(lines[sum_node+1:sum_node*2+1]):
+        adj.set_name(i, line[:-1])
 
-    # while (f_readc != '-'):
-    #     if (f_readc == ' '):
-    #         line.append(int(weight))
-    #         weight = ""
-    #         kol += 1
-    #     elif (f_readc == '\n'):
-    #         line.append(int(weight))
-    #         matrixEdge.append(line)
-    #         line, weight = [], ""
-    #     else:
-    #         weight += f_readc
-    #     f_readc = rf.read(1)
-    # rf.read(2)
-
-
-    # f_readc = rf.read(1)
-    # line, road = [], ""
-    # while (f_readc):
-    #     if (f_readc == "\""):
-    #         line.append(road)
-    #         road = ""
-    #         rf.read(2)
-    #     else:
-    #         road += f_readc
-    #     f_readc = rf.read(1)
-    # roads = line
-    # del road, line, weight, f_readc
-
-del DIRECTORY, file
-# # print(matrixEdge)
-# adj = AdjGraf(len(matrixEdge))
-# for i in range(len(matrixEdge)):
-#     for j in range(i, len(matrixEdge)):
-#         if matrixEdge[i][j] != 0:
-#             adj.add_edge(i, j, matrixEdge[i][j])
-# del matrixEdge
-# for i in range(len(roads)):
-#     adj.set_name(i, roads[i])
 print(adj.matrix, adj.name)
-# print(adj.name)
-# del roads
-simpulhidup, bobot = [], 0
-list_simpulhidup, list_bobot_simpulhidup = [], []
-curr_simpul = 0
 
+simpulhidup, bobot = "", 0
+list_nhidup = [""]
+print(list_nhidup)
+
+list_w_ntog_nhidup = [["", ""]]
+print(list_w_ntog_nhidup)
+
+list_sum_w_ntog_nhidup = [0]
+print(list_sum_w_ntog_nhidup)
+goal = 4
+curr_node = 0
+
+# initialize
+list_nhidup[0] = [str(curr_node)]
+list_w_ntog_nhidup[0] = [0, 200]
+list_sum_w_ntog_nhidup[0] = 200
+
+print(list_nhidup)
+print(list_w_ntog_nhidup)
+print(list_sum_w_ntog_nhidup)
+
+while True:
+    # mencari simpul hidup yang nilai fungsi nya terkecil
+    curr_idx = list_sum_w_ntog_nhidup.index(min(list_sum_w_ntog_nhidup))
+    # simpul hidup
+    simpulhidup = list_nhidup[curr_idx]
+    # mencari node sekarang yang akan dibangkitkan
+    curr_node = simpulhidup[-1]
+    # mencari tetangganya
+    neighbor = adj.neighbor(int(curr_node))
+    print(neighbor)
+    # iterasi
+    for i in range(len(neighbor)):
+        if neighbor[i] != '0':
+            list_nhidup.append(simpulhidup + [str(neighbor[i])])
+            list_w_ntog_nhidup.append([4, 200])            
+            list_sum_w_ntog_nhidup.append(204)
+    # delete 
+    list_nhidup = list_nhidup[:curr_idx] + list_nhidup[curr_idx+1:]
+    list_w_ntog_nhidup = list_w_ntog_nhidup[:curr_idx] + list_w_ntog_nhidup[curr_idx+1:]
+    list_sum_w_ntog_nhidup = list_sum_w_ntog_nhidup[:curr_idx] + list_sum_w_ntog_nhidup[curr_idx+1:]
+    print(curr_node)
+    break
+
+print(list_nhidup)
+print(list_w_ntog_nhidup)
+print(list_sum_w_ntog_nhidup)
 
