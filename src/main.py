@@ -1,7 +1,10 @@
 import os
-import geopy
 
-geolocator = geopy.geocoders.Nominatim(user_agent="geoapiExercises")
+from kivy.app import App
+from kivy.uix.button import Button
+from kivy_garden.mapview import MapView, MapMarkerPopup, MapMarker
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.widget import Widget
 
 class AdjGraf:
     def __init__(self, node: int):
@@ -16,6 +19,8 @@ class AdjGraf:
         return self.matrix[node]
     def set_location(self, node: int, location):
         self.location[node] = location
+    def __del__(self):
+        print("delete\n")
     
 def haversine(location1: tuple, location2: tuple) -> float:
     from math import sin, cos, pow, sqrt, asin, pi
@@ -34,7 +39,7 @@ DIRECTORY = "../test/"
 # matrixEdge = []
 
 # file
-file = input()
+file = "test2.txt"
 
 # matrix graf
 adj = None
@@ -56,17 +61,17 @@ with open(DIRECTORY + file, "r") as rf:
         adj.set_location(i, tuple(map(float, line[:-1].split(", "))))
     del brs, sum_node, i, line, lines, DIRECTORY, file
 
-print(adj.matrix, adj.location)
+# print(adj.matrix, adj.location)
 
-simpulhidup, bobot = [0], 0
+simpulhidup = [0]
 list_nhidup = [[0]]
-print(list_nhidup)
+# print(list_nhidup)
 
 list_w_ntog_nhidup = [[0, 200]]
-print(list_w_ntog_nhidup)
+# print(list_w_ntog_nhidup)
 
 list_sum_w_ntog_nhidup = [0]
-print(list_sum_w_ntog_nhidup)
+# print(list_sum_w_ntog_nhidup)
 curr_node = src
 
 # initialize
@@ -75,9 +80,9 @@ heuristic_ntog = haversine(adj.location[curr_node], adj.location[dest])
 list_w_ntog_nhidup[0] = [0, heuristic_ntog]
 list_sum_w_ntog_nhidup[0] = heuristic_ntog
 
-print(list_nhidup)
-print(list_w_ntog_nhidup)
-print(list_sum_w_ntog_nhidup)
+# print(list_nhidup)
+# print(list_w_ntog_nhidup)
+# print(list_sum_w_ntog_nhidup)
 while True:
     # mencari simpul hidup yang nilai fungsi nya terkecil
     curr_idx = list_sum_w_ntog_nhidup.index(min(list_sum_w_ntog_nhidup))
@@ -85,7 +90,7 @@ while True:
     simpulhidup = list_nhidup[curr_idx]
     # mencari node sekarang yang akan dibangkitkan
     curr_node = int(simpulhidup[-1])
-    print(curr_node)
+    # print(curr_node)
     # jika node sekarang adalah node tujuan maka pencarian berhenti
     if curr_node == dest: break
     # mendelete penelusuran simpul hidup node, bobot nya dan heuristicnya
@@ -102,13 +107,78 @@ while True:
             # push
             simpulhidup.append(node)
             list_nhidup.append(simpulhidup)
-            # haversine()
             weight = haversine(adj.location[curr_node], adj.location[node])
             heuristic_ntog = haversine(adj.location[node], adj.location[dest])
             list_w_ntog_nhidup.append([weight, heuristic_ntog])
             list_sum_w_ntog_nhidup.append(weight+heuristic_ntog)
         simpulhidup = old_simpulhidup
         del old_simpulhidup
-    print(list_nhidup)
+#     print(list_nhidup)
+# print(simpulhidup)
 
-print(simpulhidup)
+class MyGridLayout(GridLayout):
+    def __init__(self, **kwargs):
+        super(MyGridLayout, self).__init__(**kwargs)
+        self.cols = 2
+        self.mapview = MapView(lon=adj.location[0][0], lat=adj.location[0][1])
+        self.mapview.center_on(adj.location[0][0], adj.location[0][1])
+        self.mapview.zoom = 18
+
+        # mark simpul
+        for i in range(len(adj.location)):
+            self.mapmarkerpopup = MapMarkerPopup(lat=adj.location[i][0], lon=adj.location[i][1], source="img/markerpopup.png")
+            self.mapmarkerpopup.bind(on_press=self.printHello)
+            self.mapview.add_marker(self.mapmarkerpopup)
+
+        # mark road
+        for i in range(len(adj.matrix)):
+            for j in range(len(adj.matrix)):
+                if adj.matrix[i][j] == 1:
+                    if adj.location[i][0] < adj.location[j][0]:
+                        middle = adj.location[i][0] + (adj.location[j][0] - adj.location[i][0])/2.0
+                    else:
+                        middle = adj.location[j][0] + (adj.location[i][0] - adj.location[j][0])/2.0
+                    if adj.location[i][1] < adj.location[j][1]:
+                        middle_2 = adj.location[i][1] + (adj.location[j][1] - adj.location[i][1])/2.0
+                    else:
+                        middle_2 = adj.location[j][1] + (adj.location[i][1] - adj.location[j][1])/2.0
+
+                    self.mapmarkerpopup = MapMarkerPopup(lat=middle, lon=middle_2, source="img/road.png")
+                    self.mapmarkerpopup.bind(on_press=self.printHello)
+                    self.mapview.add_marker(self.mapmarkerpopup)
+
+        # mark path
+        for i in range(1, len(simpulhidup)):
+            if adj.location[simpulhidup[i]][0] < adj.location[simpulhidup[i-1]][0]:
+                middle = adj.location[simpulhidup[i]][0] + (adj.location[simpulhidup[i-1]][0] - adj.location[simpulhidup[i]][0])/2.0
+            else:
+                middle = adj.location[simpulhidup[i-1]][0] + (adj.location[simpulhidup[i]][0] - adj.location[simpulhidup[i-1]][0])/2.0
+            if adj.location[simpulhidup[i]][1] < adj.location[simpulhidup[i-1]][1]:
+                middle_2 = adj.location[simpulhidup[i]][1] + (adj.location[simpulhidup[i-1]][1] - adj.location[simpulhidup[i]][1])/2.0
+            else:
+                middle_2 = adj.location[simpulhidup[i-1]][1] + (adj.location[simpulhidup[i]][1] - adj.location[simpulhidup[i-1]][1])/2.0
+
+            self.mapmarkerpopup = MapMarkerPopup(lat=middle, lon=middle_2, source="img/path.png")
+            self.mapmarkerpopup.bind(on_press=self.printHello)
+            self.mapview.add_marker(self.mapmarkerpopup)
+        
+        # mark source
+        self.mapmarkerpopup = MapMarkerPopup(lat=adj.location[src][0], lon=adj.location[src][1], source="img/source.png")
+        self.mapmarkerpopup.bind(on_press=self.printHello)
+        self.mapview.add_marker(self.mapmarkerpopup)
+        # mark destination
+        self.mapmarkerpopup = MapMarkerPopup(lat=adj.location[dest][0], lon=adj.location[dest][1], source="img/dest.png")
+        self.mapmarkerpopup.bind(on_press=self.printHello)
+        self.mapview.add_marker(self.mapmarkerpopup)
+        
+        self.add_widget(self.mapview)
+
+    def printHello(self, instance):
+        print("Hello")
+
+class MainApp(App):
+    def build(self):
+        return MyGridLayout()
+
+if __name__ == "__main__":
+    MainApp().run()
